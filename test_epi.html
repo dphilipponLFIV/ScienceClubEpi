@@ -8,7 +8,7 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            margin: 20px;
+            margin: 0px;
             background-color: #f9f9f9;
             color: #333;
             display: flex;
@@ -101,12 +101,10 @@
             justify-content: flex-start;  /* Positionne les éléments au début (gauche) */
             align-items: center;  /* Aligne verticalement l'image et les liens */
             background-color: #333;
-            padding: 10px 20px;
-            position: fixed;
+            padding: 20px 20px;
             top: 0;
             left: 0;
             width: 100%;
-            z-index: 1000;
         }
 
         .menu-logo {
@@ -125,7 +123,7 @@
             text-decoration: none;
             color: white;
             padding: 10px 20px;
-            margin: 0 10px;
+            margin: 0 0px;
             transition: background-color 0.3s ease;
         }
 
@@ -136,7 +134,7 @@
 
         /* Contenu en dessous du menu */
         .content {
-            padding: 100px 20px 20px;
+            padding: 5px 20px 20px;
             text-align: center;
             background-color: #f4f4f4;
             display: flex;
@@ -186,9 +184,9 @@
             <br>
 
             <h3>Compartiments</h3>
-            <label><input type="checkbox" id="latent" name="compartments" value="Latents"> Latents</label><br>
-            <label><input type="checkbox" id="recovered" name="compartments" value="Recovered" checked> Rétablis</label><br>
-            <label><input type="checkbox" id="deceased" name="compartments" value="Deceased"> Décédés</label><br>
+            <label><input type="checkbox" id="latent" name="compartments" value="Latents"> Latents</label>
+            <label><input type="checkbox" id="recovered" name="compartments" value="Recovered" checked> Rétablis</label>
+            <label><input type="checkbox" id="deceased" name="compartments" value="Deceased"> Décédés</label>
 
             <button type="button" id="simulate">Simuler</button>
         </form>
@@ -268,7 +266,7 @@
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
-                        legend: { position: 'top' },
+                        legend: { position: 'bottom' },
                     },
                     scales: {
                         x: { title: { display: true, text: 'Temps (jours)' } },
