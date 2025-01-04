@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Épidémiologie - Modèle Compartimental</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f9f9f9;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .main-container {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            width: 100%;
+            max-width: 1200px;
+        }
+
+        form {
+            width: 40%;
+            padding: 20px;
+            background: #ffffff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        form h3 {
+            margin-bottom: 15px;
+            color: #34495e;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        input[type="number"] {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        input[type="checkbox"] {
+            margin-right: 8px;
+        }
+
+        button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            background-color: #3498db;
+            color: white;
+            font-size: 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #2980b9;
+        }
+
+        canvas {
+            width: 100%;
+            height: 100%;
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+
+        .chart-container {
+            width: 60%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+    <h1>Simulation d'un Modèle Épidémiologique</h1>
+
+    <div class="main-container">
+        <form id="modelForm">
+            <h3>Paramètres du modèle</h3>
+            <label for="population">Population :</label>
+            <input type="number" id="population" name="population" step="1" value="100" required>
+            <br>
+            <label for="infectes">Infectés :</label>
+            <input type="number" id="infectes" name="infectes" step="1" value="10" required>
+            <br>
+            <label for="beta">Taux de transmission (β) :</label>
+            <input type="number" id="beta" name="beta" step="0.01" value="0.3" required>
+            <br>
+            <label for="gamma">Taux de récupération (γ) :</label>
+            <input type="number" id="gamma" name="gamma" step="0.01" value="0.1" required>
+            <br>
+            <label for="mu">Taux de mortalité (μ) :</label>
+            <input type="number" id="mu" name="mu" step="0.01" value="0.01">
+            <br>
+            <label for="sigma">Taux de progression Latents -> Infectieux (σ) :</label>
+            <input type="number" id="sigma" name="sigma" step="0.01" value="0.2">
+            <br>
+
+            <h3>Compartiments</h3>
+            <label><input type="checkbox" id="latent" name="compartments" value="Latents"> Latents</label><br>
+            <label><input type="checkbox" id="recovered" name="compartments" value="Recovered" checked> Rétablis</label><br>
+            <label><input type="checkbox" id="deceased" name="compartments" value="Deceased"> Décédés</label><br>
+
+            <button type="button" id="simulate">Simuler</button>
+        </form>
+
+        <div class="chart-container">
+            <canvas id="epidemicChart"></canvas>
+        </div>
+    </div>
+
+    <script>
+        let chartInstance;
+
+        document.getElementById('simulate').addEventListener('click', () => {
+            const beta = parseFloat(document.getElementById('beta').value);
+            const gamma = parseFloat(document.getElementById('gamma').value);
+            const mu = parseFloat(document.getElementById('mu').value);
+            const sigma = parseFloat(document.getElementById('sigma').value);
+            const population = parseFloat(document.getElementById('population').value);
+            const infectes = parseFloat(document.getElementById('infectes').value);
+
+            const includeLatent = document.getElementById('latent').checked;
+            const includeRecovered = document.getElementById('recovered').checked;
+            const includeDeceased = document.getElementById('deceased').checked;
+
+            let S = population-infectes, I = infectes, L = 0, R = 0, D = 0;
+            const N = S + I + L + R + D;
+
+            const timeSteps = 100;
+            const dt = 1;
+
+            const data = { S: [S], I: [I], L: [], R: [], D: [] };
+
+            for (let t = 1; t <= timeSteps; t++) {
+                let newInfections = beta * S * I / N * dt;
+                S -= newInfections;
+
+                if (includeLatent) {
+                    let latentToInfectious = sigma * L * dt;
+                    L += newInfections - latentToInfectious;
+                    I += latentToInfectious;
+                    data.L.push(L);
+                } else {
+                    I += newInfections;
+                }
+
+                let recoveries = includeRecovered ? gamma * I * dt : 0;
+                let deaths = includeDeceased ? mu * I * dt : 0;
+
+                I += -recoveries - deaths;
+                if (includeRecovered) R += recoveries;
+                if (includeDeceased) D += deaths;
+
+                data.S.push(S);
+                data.I.push(I);
+                if (includeRecovered) data.R.push(R);
+                if (includeDeceased) data.D.push(D);
+            }
+
+            if (chartInstance) {
+                chartInstance.destroy();
+            }
+
+            const ctx = document.getElementById('epidemicChart').getContext('2d');
+            chartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: Array.from({ length: timeSteps + 1 }, (_, i) => i),
+                    datasets: [
+                        { label: 'Susceptibles', data: data.S, borderColor: 'blue', fill: false },
+                        { label: 'Infectieux', data: data.I, borderColor: 'red', fill: false },
+                        includeLatent && { label: 'Latents', data: data.L, borderColor: 'orange', fill: false },
+                        includeRecovered && { label: 'Rétablis', data: data.R, borderColor: 'green', fill: false },
+                        includeDeceased && { label: 'Décédés', data: data.D, borderColor: 'black', fill: false },
+                    ].filter(Boolean),
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'top' },
+                    },
+                    scales: {
+                        x: { title: { display: true, text: 'Temps (jours)' } },
+                        y: { title: { display: true, text: 'Population' } },
+                    },
+                },
+            });
+        });
+    </script>
+</body>
+</html>

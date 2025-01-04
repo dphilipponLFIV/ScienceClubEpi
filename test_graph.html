@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Épidémie Simulation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            height: 100vh;
+        }
+
+        #left-panel {
+            width: 30%;
+            padding: 20px;
+            background-color: #f7f7f7;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+        }
+
+        #right-panel {
+            flex-grow: 1;
+            padding: 20px;
+        }
+
+        .form-section {
+            margin-bottom: 20px;
+        }
+
+        canvas {
+            max-width: 100%;
+        }
+
+        #graph-container {
+            width: 100%;
+            height: 500px;
+            border: 1px solid #ccc;
+        }
+    </style>
+    <script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div id="left-panel">
+        <h1>Simulation</h1>
+        <div class="form-section">
+            <label for="infection-rate">Taux d'infection (%):</label>
+            <input type="number" id="infection-rate" value="30" min="0" max="100"> <br>
+            <label for="recovery-rate">Taux de récupération (%):</label>
+            <input type="number" id="recovery-rate" value="20" min="0" max="100"> <br>
+            <label for="mortality-rate">Taux de mortalité (%):</label>
+            <input type="number" id="mortality-rate" value="10" min="0" max="100"> <br>
+            <button id="generate-btn">Générer</button>
+            <button id="step-btn">Avancer d'un jour</button>
+        </div>
+        <canvas id="status-chart"></canvas>
+    </div>
+
+    <div id="right-panel">
+        <div id="graph-container"></div>
+    </div>
+
+    <script>
+        let network;
+        let nodes = new vis.DataSet();
+        let edges = new vis.DataSet();
+        let chart;
+        const statuses = {
+            S: { color: 'green', label: 'Susceptible' },
+            I: { color: 'red', label: 'Infecté' },
+            R: { color: 'blue', label: 'Rétabli' },
+            D: { color: 'black', label: 'Décédé' },
+            V: { color: 'cyan', label: 'Vacciné' }
+        };
+
+        document.getElementById('generate-btn').addEventListener('click', () => {
+            generateGraph();
+            resetChart();
+        });
+        document.getElementById('step-btn').addEventListener('click', advanceDay);
+
+        function generateGraph() {
+            const nodeCount = 50;
+            nodes.clear();
+            edges.clear();
+
+            for (let i = 1; i <= nodeCount; i++) {
+                nodes.add({ id: i, label: `Node ${i}`, color: statuses.S.color, status: 'S' });
+            }
+
+            for (let i = 1; i <= nodeCount; i++) {
+                const connections = Math.floor(Math.random() * 4) + 1;
+                for (let j = 0; j < connections; j++) {
+                    const target = Math.ceil(Math.random() * nodeCount);
+                    if (target !== i && !edges.get({ filter: e => e.from === i && e.to === target }).length) {
+                        edges.add({ from: i, to: target });
+                    }
+                }
+            }
+
+            drawGraph();
+        }
+
+        function drawGraph() {
+            const container = document.getElementById('graph-container');
+            const data = { nodes: nodes, edges: edges };
+            const options = {
+                nodes: { shape: 'dot', size: 15 },
+                physics: { enabled: true },
+                interaction: { hover: true },
+            };
+            network = new vis.Network(container, data, options);
+
+            network.on('click', function (params) {
+                if (params.nodes.length > 0) {
+                    const nodeId = params.nodes[0];
+                    cycleNodeStatus(nodeId);
+                }
+            });
+        }
+
+        function cycleNodeStatus(nodeId) {
+            const node = nodes.get(nodeId);
+            const currentStatus = node.status;
+            const newStatus = currentStatus === 'S' ? 'I' : currentStatus === 'I' ? 'R' : currentStatus === 'R' ? 'D' : currentStatus === 'D' ? 'V' : 'S';
+            nodes.update({ id: nodeId, color: statuses[newStatus].color, status: newStatus });
+            updateEdgeColors(nodeId);
+        }
+
+        function updateEdgeColors(nodeId) {
+            edges.forEach(edge => {
+                if (edge.from === nodeId || edge.to === nodeId) {
+                    const fromNode = nodes.get(edge.from);
+                    const toNode = nodes.get(edge.to);
+                    const edgeColor = fromNode.color === toNode.color ? fromNode.color : 'gray';
+                    edges.update({ id: edge.id, color: { color: edgeColor } });
+                }
+            });
+        }
+
+        function advanceDay() {
+            const infectionRate = parseInt(document.getElementById('infection-rate').value) / 100;
+            const recoveryRate = parseInt(document.getElementById('recovery-rate').value) / 100;
+            const mortalityRate = parseInt(document.getElementById('mortality-rate').value) / 100;
+
+            nodes.forEach(node => {
+                if (node.status === 'I') {
+                    const rand = Math.random();
+                    if (rand < mortalityRate) {
+                        nodes.update({ id: node.id, color: statuses.D.color, status: 'D' });
+                    } else if (rand < mortalityRate + recoveryRate) {
+                        nodes.update({ id: node.id, color: statuses.R.color, status: 'R' });
+                    } else {
+                        network.getConnectedEdges(node.id).forEach(edgeId => {
+                            const edge = edges.get(edgeId);
+                            const targetId = edge.from === node.id ? edge.to : edge.from;
+                            const targetNode = nodes.get(targetId);
+                            if (targetNode.status === 'S' && Math.random() < infectionRate) {
+                                nodes.update({ id: targetId, color: statuses.I.color, status: 'I' });
+                            }
+                        });
+                    }
+                }
+            });
+            updateChart();
+        }
+
+        function resetChart() {
+            const ctx = document.getElementById('status-chart').getContext('2d');
+            if (chart) chart.destroy();
+            chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [0],
+                    datasets: Object.keys(statuses).map(status => ({
+                        label: statuses[status].label,
+                        borderColor: statuses[status].color,
+                        data: [nodes.get({ filter: n => n.status === status }).length],
+                        fill: false,
+                    })),
+                },
+                options: {
+                    responsive: true,
+                    scales: { x: { title: { display: true, text: 'Jour' } }, y: { beginAtZero: true } },
+                },
+            });
+        }
+
+        function updateChart() {
+            const day = chart.data.labels.length;
+            chart.data.labels.push(day);
+            chart.data.datasets.forEach(dataset => {
+                const status = Object.keys(statuses).find(s => statuses[s].label === dataset.label);
+                dataset.data.push(nodes.get({ filter: n => n.status === status }).length);
+            });
+            chart.update();
+        }
+
+        generateGraph();
+        resetChart();
+    </script>
+</body>
+</html>
