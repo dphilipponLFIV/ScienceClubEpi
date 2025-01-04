@@ -7,47 +7,167 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            height: 100vh;
-        }
-
-        #left-panel {
-            width: 30%;
-            padding: 20px;
-            background-color: #f7f7f7;
+            margin: 20px;
+            background-color: #f9f9f9;
+            color: #333;
             display: flex;
             flex-direction: column;
-            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+            align-items: center;
         }
 
-        #right-panel {
-            flex-grow: 1;
-            padding: 20px;
-        }
-
-        .form-section {
+        h1 {
+            color: #2c3e50;
+            text-align: center;
             margin-bottom: 20px;
         }
 
-        canvas {
-            max-width: 100%;
+        .main-container {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            width: 100%;
+            max-width: 1200px;
         }
 
-        #graph-container {
+        #modelForm {
+            width: 40%;
+            padding: 20px;
+            background: #ffffff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        #modelForm h3 {
+            margin-bottom: 15px;
+            color: #34495e;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        input[type="number"] {
             width: 100%;
-            height: 500px;
+            padding: 8px;
+            margin-bottom: 15px;
             border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        input[type="checkbox"] {
+            margin-right: 8px;
+        }
+
+        button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 8px;
+            background-color: #3498db;
+            color: white;
+            font-size: 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #2980b9;
+        }
+
+        canvas {
+            width: 100%;
+            height: 100%;
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+
+        .chart-container {
+            width: 60%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+        /* Style du menu */
+        .menu {
+            display: flex;
+            justify-content: flex-start;  /* Positionne les éléments au début (gauche) */
+            align-items: center;  /* Aligne verticalement l'image et les liens */
+            background-color: #333;
+            padding: 10px 20px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 1000;
+        }
+
+        .menu-logo {
+            height: 40px;  /* Ajuste la taille de l'image */
+            margin-right: 20px;  /* Espace entre l'image et les liens */
+        }
+
+        /* Conteneur des liens */
+        .menu-links {
+            display: flex;
+            justify-content: center;  /* Centre les liens */
+            flex-grow: 1;  /* Permet à cet élément de prendre toute la place restante */
+        }
+
+        .menu a {
+            text-decoration: none;
+            color: white;
+            padding: 10px 20px;
+            margin: 0 10px;
+            transition: background-color 0.3s ease;
+        }
+
+        /* Effet au survol des liens */
+        .menu a:hover {
+            background-color: #575757;
+        }
+
+        /* Contenu en dessous du menu */
+        .content {
+            padding: 100px 20px 20px;
+            text-align: center;
+            background-color: #f4f4f4;
+            display: flex;
+            justify-content: space-between;
+        }
+        #graph-container {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            width: 100%;
+            height: 500px; /* Définir une hauteur fixe ou maximale */
+            background-color: #f9f9f9; /* Vous pouvez aussi définir une couleur de fond pour visualiser le conteneur */
         }
     </style>
     <script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-    <div id="left-panel">
-        <h1>Simulation</h1>
-        <div class="form-section">
+
+    <div class="menu">
+        <img src="./Logo-LFIV.webp" height="40px" class="menu-logo"/>
+
+        <div class="menu-links">
+            <a href="test_epi.html">Modèle mathématique de transmission</a>
+            <a href="test_graph.html">Réseau d'infection et immunité grégaire</a>
+        </div>
+    </div>
+
+    <div class="content main-container">
+        <div  id="modelForm">
+            <h1>Réseau d'infection</h1>
+            <label for="nombre_noeuds">Nombre de noeuds:</label>
+            <input type="number" id="nombre_noeuds" value="10" min="0" max="100"> <br>
             <label for="infection-rate">Taux d'infection (%):</label>
             <input type="number" id="infection-rate" value="30" min="0" max="100"> <br>
             <label for="recovery-rate">Taux de récupération (%):</label>
@@ -55,14 +175,16 @@
             <label for="mortality-rate">Taux de mortalité (%):</label>
             <input type="number" id="mortality-rate" value="10" min="0" max="100"> <br>
             <button id="generate-btn">Générer</button>
+            <button id="init-btn">Réinitialiser</button>
             <button id="step-btn">Avancer d'un jour</button>
         </div>
-        <canvas id="status-chart"></canvas>
+        <div class="chart-container">
+            <div id="graph-container"></div>
+            <canvas id="status-chart"></canvas>
+        </div>
+
     </div>
 
-    <div id="right-panel">
-        <div id="graph-container"></div>
-    </div>
 
     <script>
         let network;
@@ -81,10 +203,15 @@
             generateGraph();
             resetChart();
         });
+        document.getElementById('init-btn').addEventListener('click', () => {
+            initGraph();
+            console.log("Reinitialisation");
+            resetChart();
+        });
         document.getElementById('step-btn').addEventListener('click', advanceDay);
 
         function generateGraph() {
-            const nodeCount = 50;
+            const nodeCount = parseFloat(document.getElementById('nombre_noeuds').value);;
             nodes.clear();
             edges.clear();
 
@@ -104,13 +231,19 @@
 
             drawGraph();
         }
-
+        function initGraph(){
+            nodes.forEach(node => { nodes.update({id: node.id, color: statuses.S.color, status: 'S'})});
+            edges.forEach(edge => {
+                edges.update({ id: edge.id, color: { color: statuses.S.color } });
+            });
+        }
         function drawGraph() {
             const container = document.getElementById('graph-container');
             const data = { nodes: nodes, edges: edges };
             const options = {
                 nodes: { shape: 'dot', size: 15 },
                 physics: { enabled: true },
+                autoResize: true,
                 interaction: { hover: true },
             };
             network = new vis.Network(container, data, options);
@@ -121,6 +254,7 @@
                     cycleNodeStatus(nodeId);
                 }
             });
+
         }
 
         function cycleNodeStatus(nodeId) {
@@ -185,6 +319,9 @@
                 },
                 options: {
                     responsive: true,
+                    animation: {
+                        duration: 0
+                    },
                     scales: { x: { title: { display: true, text: 'Jour' } }, y: { beginAtZero: true } },
                 },
             });

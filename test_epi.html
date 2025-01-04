@@ -30,7 +30,7 @@
             max-width: 1200px;
         }
 
-        form {
+        #modelForm {
             width: 40%;
             padding: 20px;
             background: #ffffff;
@@ -39,7 +39,7 @@
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
-        form h3 {
+        #modelForm h3 {
             margin-bottom: 15px;
             color: #34495e;
         }
@@ -67,6 +67,7 @@
             display: block;
             width: 100%;
             padding: 10px;
+            margin-bottom: 8px;
             background-color: #3498db;
             color: white;
             font-size: 16px;
@@ -92,14 +93,78 @@
             display: flex;
             justify-content: center;
             align-items: center;
+            flex-direction: column;
+        }
+        /* Style du menu */
+        .menu {
+            display: flex;
+            justify-content: flex-start;  /* Positionne les éléments au début (gauche) */
+            align-items: center;  /* Aligne verticalement l'image et les liens */
+            background-color: #333;
+            padding: 10px 20px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 1000;
+        }
+
+        .menu-logo {
+            height: 40px;  /* Ajuste la taille de l'image */
+            margin-right: 20px;  /* Espace entre l'image et les liens */
+        }
+
+        /* Conteneur des liens */
+        .menu-links {
+            display: flex;
+            justify-content: center;  /* Centre les liens */
+            flex-grow: 1;  /* Permet à cet élément de prendre toute la place restante */
+        }
+
+        .menu a {
+            text-decoration: none;
+            color: white;
+            padding: 10px 20px;
+            margin: 0 10px;
+            transition: background-color 0.3s ease;
+        }
+
+        /* Effet au survol des liens */
+        .menu a:hover {
+            background-color: #575757;
+        }
+
+        /* Contenu en dessous du menu */
+        .content {
+            padding: 100px 20px 20px;
+            text-align: center;
+            background-color: #f4f4f4;
+            display: flex;
+            justify-content: space-between;
+        }
+        #graph-container {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            width: 100%;
+            height: 500px; /* Définir une hauteur fixe ou maximale */
+            background-color: #f9f9f9; /* Vous pouvez aussi définir une couleur de fond pour visualiser le conteneur */
         }
     </style>
 </head>
 <body>
-    <h1>Simulation d'un Modèle Épidémiologique</h1>
 
-    <div class="main-container">
+    <div class="menu">
+        <img src="./Logo-LFIV.webp" height="40px" class="menu-logo"/>
+
+        <div class="menu-links">
+            <a href="test_epi.html">Modèle mathématique de transmission</a>
+            <a href="test_graph.html">Réseau d'infection et immunité grégaire</a>
+        </div>
+    </div>
+
+    <div class="content main-container">
         <form id="modelForm">
+            <h1>Simulation d'un Modèle Épidémiologique</h1>
             <h3>Paramètres du modèle</h3>
             <label for="population">Population :</label>
             <input type="number" id="population" name="population" step="1" value="100" required>
