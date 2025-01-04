@@ -257,10 +257,10 @@
                 data: {
                     labels: Array.from({ length: timeSteps + 1 }, (_, i) => i),
                     datasets: [
-                        { label: 'Susceptibles', data: data.S, borderColor: 'blue', fill: false },
+                        { label: 'Susceptibles', data: data.S, borderColor: 'green', fill: false },
                         { label: 'Infectieux', data: data.I, borderColor: 'red', fill: false },
                         includeLatent && { label: 'Latents', data: data.L, borderColor: 'orange', fill: false },
-                        includeRecovered && { label: 'Rétablis', data: data.R, borderColor: 'green', fill: false },
+                        includeRecovered && { label: 'Rétablis', data: data.R, borderColor: 'blue', fill: false },
                         includeDeceased && { label: 'Décédés', data: data.D, borderColor: 'black', fill: false },
                     ].filter(Boolean),
                 },
